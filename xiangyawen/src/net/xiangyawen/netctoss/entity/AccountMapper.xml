@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="net.xiangyawen.netctoss.dao.AccountMapperDao">
+
+	<!-- findByPage -->
+	<select id="findByPage" resultType="net.xiangyawen.netctoss.entity.Account"
+	 parameterType="net.xiangyawen.netctoss.vo.AccountPage">
+     select *
+     from(
+		select * from ACCOUNT
+		<where>
+			<if test='!"*".equals(idcard_no)'>
+				IDCARD_NO=#{idcard_no}
+			</if>
+			<if test='!"*".equals(real_name)'>
+				and REAL_NAME=#{real_name}
+			</if>
+			<if test='!"*".equals(login_name)'>
+				and LOGIN_NAME=#{login_name}
+			</if>
+			<if test='!"-1".equals(status)'>
+				and STATUS=#{status}
+			</if>
+		</where>
+		order by account_id
+	 ) t1 limit #{begin},#{end}
+	</select>
+	
+
+	<!-- findRows -->
+	<select id="findRows"
+		parameterType="net.xiangyawen.netctoss.vo.AccountPage"
+		resultType="int">
+		select count(*) from account
+		<where>
+			<if test='!"*".equals(idcard_no)'>
+				IDCARD_NO=#{idcard_no}
+			</if>
+			<if test='!"*".equals(real_name)'>
+				and REAL_NAME=#{real_name}
+			</if>
+			<if test='!"*".equals(login_name)'>
+				and LOGIN_NAME=#{login_name}
+			</if>
+			<if test='!"-1".equals(status)'>
+				and STATUS=#{status}
+			</if>
+		</where>		
+	</select>
+	
+	<!-- 暂停 -->
+	<update id="stop"
+		parameterType="int">
+		update account set status='1',
+		pause_date=sysdate
+		where account_id=#{id}
+	</update>
+	
+	<!-- findById -->
+	<select id="findById"
+		parameterType="int"
+		resultType="net.xiangyawen.netctoss.entity.Account">
+		select a.*,b.idcard_no recommender_idcard_no
+		from account a
+		left join account b 
+		on a.recommender_id=b.account_id
+		where a.account_id=#{id}
+	</select>
+	
+	<!-- findByIdcardNo -->
+	<select id="findByIdcardNo"
+		parameterType="string"
+		resultType="net.xiangyawen.netctoss.entity.Account">
+		select * from account 
+		where idcard_no=#{idcardNo}
+	</select>
+
+</mapper>

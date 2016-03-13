@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+ 
+<mapper namespace="net.xiangyawen.netctoss.dao.AdminInfoMapperDao">
+
+	<!-- 用于管理员员登陆 -->
+	<select id="findByAdminCode" parameterType="java.lang.String" resultType="net.xiangyawen.netctoss.entity.AdminInfo">
+		select * from admin_info  where admin_code=#{admin_code}
+	</select>
+	
+	
+	<!-- findByPage -->
+	<select id="findByPage" parameterType="net.xiangyawen.netctoss.vo.AdminPage" 
+	resultMap="adminMap">
+		select * from (
+			select * from (
+				select * from admin_info 
+				where admin_id in (
+					select ai.admin_id from admin_info ai
+					left join admin_role ar on ar.admin_id=ai.admin_id
+					left join role_info ri on ri.role_id=ar.role_id
+					left join role_module rm on rm.role_id=ri.role_id
+					left join module_info mi on mi.module_id=rm.module_id
+					<where>
+						<if test='roleName!=null&amp;&amp;!roleName.equals("")'>
+							and ri.name like '%'||#{roleName}||'%'
+						</if>
+						<if test="moduleId!=null">
+							and mi.module_id=#{moduleId}
+						</if>
+					</where>
+				)
+				order by admin_id
+			) a
+		) b LIMIT #{begin},#{end}
+	</select>
+	
+	<!-- 关联查询出角色：根据管理员id查看对应的角色，展显对应的角色id和name -->
+	<select id="findRoleByAdminId" parameterType="int" resultType="net.xiangyawen.netctoss.entity.Role">
+		select * from role_info 
+		where role_id in (
+			select role_id from admin_role
+			where admin_id=#{admin_id}
+		)
+	</select>
+	
+	<resultMap id="adminMap" type="net.xiangyawen.netctoss.entity.AdminInfo">
+		<id column="admin_id" property="admin_id"/>
+		<collection select="findRoleByAdminId"  column="admin_id"  javaType="arraylist"
+			ofType="net.xiangyawen.netctoss.entity.Role"  property="roles">
+		</collection>
+	</resultMap>
+	
+	<!-- findRows -->
+	<select id="findRows"
+		resultType="int">
+		select count(*) from admin_info
+	</select>
+	
+	
+	<!-- findAllModule 查出所有角色-->
+	<select id="findAllRole" resultType="net.xiangyawen.netctoss.entity.Role">
+		select * from role_info order by role_id
+	</select>
+	
+	<!-- findByAdminId -->
+	<select id="findByAdminId" parameterType="int" resultMap="adminMap">
+		select * from admin_info where admin_id=#{admin_id}
+	</select>
+	
+	
+	
+	<!-- 添加管理员 -->
+	<!-- saveRole 根据插入admin_info的值获取id-->
+	<insert id="saveAdmin" useGeneratedKeys="true" 
+	keyProperty="admin_id" parameterType="net.xiangyawen.netctoss.entity.AdminInfo">  
+    	INSERT INTO admin_info (admin_code,password,name,telphone,email,enrolldate) 
+    	VALUES(#{admin_code},#{password},#{name},#{telphone},#{email},CURDATE()) 
+	</insert> 
+	
+	<!-- 添加中间表admin_role表数据 -->
+	<!-- saveRoleModule -->
+	<insert id="saveAdminRole" parameterType="HashMap">
+		insert into admin_role values(#{admin_id},#{role_id})
+	</insert>
+	
+	<!-- 修改管理员 -->
+	<!-- update -->
+	<update id="update" parameterType="net.xiangyawen.netctoss.entity.AdminInfo">
+		update admin_info set admin_code=#{admin_code},name=#{name},telphone=#{telphone},email=#{email}
+		where admin_id=#{admin_id}
+	</update>
+	
+	<!-- 删除admin_info表中对应的admin_role表中的数据 -->
+	<!-- deleteAdminRole -->
+	<delete id="deleteAdminRole" parameterType="int">
+		delete from admin_role where admin_id=#{adminId}
+	</delete>
+	
+	<!-- 删除管理员信息 -->
+	<delete id="deleteAdmin" parameterType="int">
+		delete from admin_info where admin_id=#{admin_id}
+	</delete>
+	
+	<!-- updatePassword -->
+	<update id="updatePassword"
+		parameterType="hashmap">
+		update admin_info 
+		set password=#{defaultPassword}
+		where admin_id in 
+		<foreach collection="ids" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>		
+	</update>
+	
+	
+	<!-- 根据对应的管理员id查看对应的模块module_id和name -->
+	<!-- findModuleByAdminId -->
+	<select id="findModuleByAdminId"
+		parameterType="int"
+		resultType="net.xiangyawen.netctoss.entity.Module">
+		select * from module_info
+		where module_id in (
+			select mi.module_id
+			from admin_info ai
+			left join admin_role ar
+			on ar.admin_id=ai.admin_id
+			left join role_info ri
+			on ri.role_id=ar.role_id
+			left join role_module rm
+			on rm.role_id=ri.role_id
+			left join module_info mi
+			on mi.module_id=rm.module_id
+			where ai.admin_id=#{adminId}
+		) order by module_id		
+	</select>
+
+</mapper>

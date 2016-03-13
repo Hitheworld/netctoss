@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+ 
+<mapper namespace="net.xiangyawen.netctoss.dao.CostMapperDao">
+
+	
+	<select id="findAll"  resultType="net.xiangyawen.netctoss.entity.Cost">
+		select * from cost order by cost_id
+	</select>
+	
+	<delete id="deleteCost" parameterType="int">
+		delete from cost where cost_id=#{id}
+	</delete>
+	
+	<!--  keyProperty="cost_id" useGeneratedKeys="true"  用于查到到插入的id -->
+	<insert id="saveCost" parameterType="net.xiangyawen.netctoss.entity.Cost"
+	 keyProperty="cost_id" useGeneratedKeys="true">
+		insert into cost (name,base_duration,base_cost,unit_cost,status,descr,creatime,startime,cost_type) values (#{name},#{base_duration},#{base_cost},#{unit_cost},'1',#{descr},null,null,#{cost_type})
+	</insert>
+	
+	<select id="findById" parameterType="int" resultType="net.xiangyawen.netctoss.entity.Cost">
+		select * from cost where cost_id=#{id}
+	</select>
+	
+	<update id="updateCost" parameterType="net.xiangyawen.netctoss.entity.Cost">
+		update cost set name=#{name},base_duration=#{base_duration,jdbcType=NUMERIC},base_cost=#{base_cost},unit_cost=#{unit_cost},descr=#{descr},startime=CURDATE(),cost_type=#{cost_type} where cost_id=#{cost_id}
+		<!-- jdbcType=NUMERIC表示这个值有可能会为空 -->
+		<!-- 当进行更新或添加操作时，遇到null值写入，需要在MyBatis定义SQL部分指定jdbcType属性类型，否则会产生无效列类型,否则会产生无效列类型111异常 -->
+	</update>
+	
+	<select id="findPage" parameterType="net.xiangyawen.netctoss.vo.Page" resultType="net.xiangyawen.netctoss.entity.Cost">
+		select * from cost  LIMIT #{begin},#{end}
+	</select>
+	
+	<select id="findRows" resultType="int">
+		select count(*) from cost
+	</select>
+	
+	
+	<select id="findByName" parameterType="java.lang.String" resultType="net.xiangyawen.netctoss.entity.Cost">
+		select * from cost where NAME=#{name}
+	</select>
+
+</mapper>
